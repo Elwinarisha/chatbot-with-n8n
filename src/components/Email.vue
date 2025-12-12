@@ -1,7 +1,7 @@
 <template>
   <div class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
     <div class="bg-black rounded-xl shadow-2xl p-8 w-full max-w-md">
-      
+
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-[#19a8ff]">Login / Sign Up</h2>
         <button @click="$emit('close-email')" class="text-gray-400 hover:text-gray-700 cursor-pointer">✕</button>
@@ -10,7 +10,8 @@
       <form v-if="step === 1" @submit.prevent="sendOtp">
         <div class="mb-4">
           <label class="block text-sm font-medium text-gray-200 mb-1">Email</label>
-          <input type="email" v-model="email" required class="w-full px-4 py-2 border border-[#19a8ff] focus:outline-none rounded-lg text-white" />
+          <input type="email" v-model="email" required
+            class="w-full px-4 py-2 border border-[#19a8ff] focus:outline-none rounded-lg text-white" />
         </div>
 
         <button type="submit" class=" px-4 py-2 bg-[#19a8ff] text-white font-semibold rounded-lg cursor-pointer">
@@ -28,11 +29,13 @@
 
         <div class="mb-4">
           <label class="block text-sm font-medium text-gray-200 mb-1">Enter OTP</label>
-          <input type="text" v-model="otp" required maxlength="6" class="w-full px-4 py-2 border border-[#19a8ff] focus:outline-none rounded-lg text-white" />
+          <!-- <input type="text" v-model="otp" required maxlength="6" class="w-full px-4 py-2 border border-[#19a8ff] focus:outline-none rounded-lg text-white" /> -->
+          <div class="flex items-center justify-between mb-4 mt-4">
+            <input v-for="i in 6" :key="i" ref="otpInputs" type="text" maxlength="1"
+              class="w-10 h-10 text-center text-lg border border-[#19a8ff] focus:outline-none rounded-lg bg-black text-white"
+              @input="handleOtpInput(i - 1, $event)" @keydown.backspace="handleBackspace(i - 1)" />
+          </div>
         </div>
-        <!-- <input v-for="i in 6" :key="i" type="text" maxlength="1" class="w-12 h-12 text-center text-lg border border-black m-2 rounded"
-            required /> -->
-
         <button type="submit" class="px-4 py-2 bg-[#19a8ff] text-white font-semibold rounded-lg cursor-pointer">
           {{ isLoading ? 'Verifying...' : 'Verify OTP' }}
         </button>
@@ -56,11 +59,12 @@ const BACKEND_URL = "http://localhost:3001/api";
 
 const emit = defineEmits(["auth-success", "close-email"]);
 
-const step = ref(1); 
+const step = ref(1);
 const email = ref("");
 const otp = ref("");
 const isLoading = ref(false);
 const errorMessage = ref("");
+const otpInputs = ref([]);
 
 async function sendOtp() {
   isLoading.value = true;
@@ -97,4 +101,25 @@ async function verifyOtp() {
 
   isLoading.value = false;
 }
+function handleOtpInput(index, event) {
+  const value = event.target.value;
+
+  // Move to next box automatically
+  if (value && index < 5) {
+    otpInputs.value[index + 1].focus();
+  }
+
+  // Build OTP string from all boxes
+  otp.value = otpInputs.value.map(i => i.value).join("");
+}
+
+function handleBackspace(index) {
+  // Move to previous box on backspace
+  if (index > 0 && !otpInputs.value[index].value) {
+    otpInputs.value[index - 1].focus();
+  }
+
+  otp.value = otpInputs.value.map(i => i.value).join("");
+}
+
 </script>
